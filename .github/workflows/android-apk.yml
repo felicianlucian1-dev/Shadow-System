@@ -1,4 +1,4 @@
-
+ 
 name: Shadow System Android Build
 
 on:
@@ -24,9 +24,27 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Find Android project
+        shell: bash
+        run: |
+          set -e
+          mkdir -p extracted
+          find . -type f -name '*.zip' -exec unzip -o {} -d extracted \;
+
+          WRAPPER=$(find . -type f -name gradlew | head -n 1)
+
+          if [ -z "$WRAPPER" ]; then
+            echo "No Gradle wrapper found."
+            find . -maxdepth 5 -type f | head -100
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$(dirname "$WRAPPER")" >> "$GITHUB_ENV"
+
       - name: Build Android APK
         run: |
-          chmod +x ./gradlew
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Save APK
