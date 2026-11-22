@@ -1,4 +1,4 @@
- 
+
 name: Shadow System Android Build
 
 on:
@@ -21,35 +21,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Find Android project
-        shell: bash
+      - name: Extract project
         run: |
-          set -e
           mkdir -p extracted
-          find . -type f -name '*.zip' -exec unzip -o {} -d extracted \;
+          find . -maxdepth 2 -type f -name '*.zip' -exec unzip -o {} -d extracted \;
 
-          WRAPPER=$(find . -type f -name gradlew | head -n 1)
-
-          if [ -z "$WRAPPER" ]; then
-            echo "No Gradle wrapper found."
-            find . -maxdepth 5 -type f | head -100
-            exit 1
-          fi
-
-          echo "PROJECT_DIR=$(dirname "$WRAPPER")" >> "$GITHUB_ENV"
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Build Android APK
-        run: |
-          cd "$PROJECT_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        working-directory: extracted/ShadowSystemRealLife
+        run: gradle assembleDebug
 
       - name: Save APK
         uses: actions/upload-artifact@v4
         with:
           name: Shadow-System-APK
-          path: '**/build/outputs/apk/debug/*.apk'
+          path: extracted/ShadowSystemRealLife/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+ 
